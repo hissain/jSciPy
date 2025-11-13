@@ -4,53 +4,65 @@ jSciPy is a Java library designed for scientific computing, offering functionali
 
 ## Features
 
-*   **Butterworth Filters**:
-    *   Implement various types of Butterworth filters: low-pass, high-pass, band-pass, and band-stop.
-    *   Supports zero-phase filtering (`filtfilt`) for applications where phase distortion is critical.
-    *   Provides standard filtering (`filter`) for causal applications.
-*   **Peak Finding**:
-    *   Efficiently detect peaks in one-dimensional signals.
-    *   Filter peaks based on properties like height, prominence, and minimum distance between peaks.
-*   **RK4 Solver**:
-    *   Solve ordinary differential equations using the Runge-Kutta 4th order method.
-    *   Flexible interface for defining custom differential equations.
+* **Butterworth Filters**:
+  * Implement various types of Butterworth filters: low-pass, high-pass, band-pass, and band-stop.
+  * Supports zero-phase filtering (`filtfilt`) for applications where phase distortion is critical.
+  * Provides standard filtering (`filter`) for causal applications.
+* **Peak Finding**:
+  * Efficiently detect peaks in one-dimensional signals.
+  * Filter peaks based on properties like height, prominence, and minimum distance between peaks.
+* **RK4 Solver**:
+  * Solve ordinary differential equations using the Runge-Kutta 4th order method.
+  * Flexible interface for defining custom differential equations.
 
 ## Getting Started
 
 ### Prerequisites
 
-*   Java Development Kit (JDK) 8 or higher
-*   Gradle (for building the project)
+* Java Development Kit (JDK) 8 or higher
+* Gradle (for building the project)
 
-### Building the Project
+## How to Include as a Dependency (JitPack)
 
-To build the jSciPy library, navigate to the project root directory and execute the following command:
+JitPack is a novel package repository for JVM projects. It builds GitHub projects on demand and provides ready-to-use artifacts (jar, javadoc, sources).
 
-```bash
-./gradlew build
-```
-
-This command compiles the source code, runs tests, and packages the library into a JAR file.
-
-### Installation (Maven/Gradle)
-
-To use jSciPy in your Maven or Gradle project, add the following dependency to your `pom.xml` (for Maven) or `build.gradle` (for Gradle) file.
-
-**Gradle:**
+To use this library in your Gradle project, add the JitPack repository and the dependency to your `build.gradle` file:
 
 ```gradle
-implementation 'com.hissain.jscipy:jscipy:1.0.0'
+// In your root build.gradle (or settings.gradle for repository definition)
+allprojects {
+    repositories {
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+// In your app's build.gradle
+dependencies {
+    implementation 'com.github.hissain:jSciPy:1.0.1' // Replace 1.0.1 with the desired version or commit hash
+}
 ```
 
-**Maven:**
+## Validation
+## API Usage
 
-```xml
-<dependency>
-    <groupId>com.hissain.jscipy</groupId>
-    <artifactId>jscipy</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
+For detailed examples on how to use the jSciPy library's public API, refer to the [API Usage Examples](docs/API_USAGE.md) document.
+
+## Validation
+
+The Java implementations have been validated against scipy's implementation.
+
+### Butterworth Filter Comparison
+
+![Butterworth Comparison](figs/butterworth_input1.txt.png)
+
+### RK4 Solver Comparison
+
+![RK4 Comparison](figs/rk4_input.txt.png)
+
+### PeakFinder Comparison
+
+![PeakFinder Comparison](figs/findpeaks_input1.txt_peaks.png)
 
 ## Usage Examples
 
@@ -100,7 +112,7 @@ public class PeakFinderExample {
         double[] signal = {0.0, 1.0, 0.5, 2.0, 0.3, 1.5, 0.8, 3.0, 0.2, 1.0};
 
         PeakFinder peakFinder = new PeakFinder();
-        PeakFinder.PeakParams params = peakFinder.new PeakParams();
+        PeakFinder.PeakParams params = new PeakFinder.PeakParams();
         params.distance = 2; // Minimum distance between peaks
         params.height = 0.5; // Minimum height of peaks
         params.prominence = 0.5; // Minimum prominence of peaks
@@ -125,11 +137,12 @@ public class PeakFinderExample {
 
 ```java
 import com.hissain.jscipy.signal.RK4Solver;
+import com.hissain.jscipy.signal.api.IRK4Solver;
 
 public class RK4SolverExample {
     public static void main(String[] args) {
         // Define a simple differential equation: dy/dt = -y
-        RK4Solver.DifferentialEquation equation = (t, y) -> -y;
+        IRK4Solver.DifferentialEquation equation = (t, y) -> -y;
 
         double y0 = 1.0; // Initial value of y
         double t0 = 0.0; // Initial time
