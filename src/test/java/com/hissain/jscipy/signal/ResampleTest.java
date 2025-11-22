@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class ResampleTest {
 
@@ -22,7 +23,8 @@ public class ResampleTest {
     private double[] readDataFile(String fileName) throws IOException {
         Path path = Paths.get(TEST_DATA_DIR + fileName);
         if (!Files.exists(path)) {
-            throw new IOException("File not found: " + path.toString());
+            System.err.println("Test data file not found: " + path.toString() + ". Please generate Python test data first.");
+            fail("Test data file not found: " + path.toString());
         }
         List<Double> data = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(path.toFile()))) {
@@ -64,7 +66,8 @@ public class ResampleTest {
 
     private double calculateRMSE(double[] expected, double[] actual) {
         if (expected.length != actual.length) {
-            throw new IllegalArgumentException("Expected and actual arrays must have the same length.");
+            throw new IllegalArgumentException("Expected and actual arrays must have the same length." +
+                    " Expected length: " + expected.length + ", Actual length: " + actual.length);
         }
         double sumSquareError = 0;
         for (int i = 0; i < expected.length; i++) {

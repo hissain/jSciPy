@@ -1,6 +1,5 @@
 package com.hissain.jscipy.signal;
 
-import com.hissain.jscipy.signal.api.IFFT;
 import com.hissain.jscipy.signal.api.IResample;
 import com.hissain.jscipy.signal.fft.FFT;
 import org.apache.commons.math3.complex.Complex;
@@ -9,7 +8,7 @@ import java.util.Arrays;
 
 public class Resample implements IResample {
 
-    private final IFFT fft;
+    private final FFT fft;
 
     public Resample() {
         this.fft = new FFT();
@@ -22,31 +21,44 @@ public class Resample implements IResample {
             return new double[0];
         }
 
-        Complex[] spectrum = fft.fft(signal);
-        Complex[] resampledSpectrum = new Complex[num];
-        Arrays.fill(resampledSpectrum, Complex.ZERO);
+        // 1. Get the RFFT spectrum
+        // FFT.rfft returns a Complex array of length N/2 + 1, where N is input signal length.
+        Complex[] rfftSpectrum = fft.rfft(signal);
+        System.out.println("DEBUG: Original RFFT Spectrum (len=" + rfftSpectrum.length + "): " + Arrays.toString(rfftSpectrum));
 
-        if (num > len) { // Upsampling
-            int halfLen = (len + 1) / 2;
-            System.arraycopy(spectrum, 0, resampledSpectrum, 0, halfLen);
+        // 2. Create new RFFT spectrum of target length, initialized to zeros
+        // The new RFFT spectrum will have length num/2 + 1.
+        int newRfftLength = num / 2 + 1;
+        Complex[] resampledRfftSpectrum = new Complex[newRfftLength];
+        Arrays.fill(resampledRfftSpectrum, Complex.ZERO);
 
-            int srcPos = halfLen;
-            int destPos = num - (len - halfLen);
-            System.arraycopy(spectrum, srcPos, resampledSpectrum, destPos, len - halfLen);
-        } else { // Downsampling
-            int halfNum = (num + 1) / 2;
-            System.arraycopy(spectrum, 0, resampledSpectrum, 0, halfNum);
+        // 3. Spectral Manipulation (copying DC, positive freqs, and handling Nyquist)
+        // The simplest RFFT spectral manipulation: copy DC component and all positive frequencies
+        // up to the minimum length. Any remaining part of newRfftSpectrum is zero-padded.
 
-            int srcPos = len - (num - halfNum);
-            int destPos = halfNum;
-            System.arraycopy(spectrum, srcPos, resampledSpectrum, destPos, num - halfNum);
-        }
+        int originalRfftLength = rfftSpectrum.length; // len/2 + 1
+        int copyLength = Math.min(originalRfftLength, newRfftLength);
+        System.arraycopy(rfftSpectrum, 0, resampledRfftSpectrum, 0, copyLength);
 
-        Complex[] ifftResult = fft.ifft(resampledSpectrum);
-        double[] realResult = new double[num];
+        System.out.println("DEBUG: Resampled RFFT Spectrum (len=" + resampledRfftSpectrum.length + "): " + Arrays.toString(resampledRfftSpectrum));
+
+        // 4. Perform Inverse RFFT
+        double[] realResult = fft.irfft(resampledRfftSpectrum, num);
+        System.out.println("DEBUG: IRFFT Result (before final scale, len=" + realResult.length + "): " + Arrays.toString(realResult));
+
+        // 5. Apply final scaling
+        // SciPy's signal.resample documentation states it scales by num / len so energy is conserved.
+        // My FFT.irfft (from user-provided code) returns values scaled by 1/num.
+        // SciPy's numpy.fft.irfft (which SciPy uses) returns values scaled by num.
+        // So Python irfft output is num*num times larger than Java irfft output.
+        // Therefore, Java output is (1/num) * (num/len) = 1/len scaled.
+        // Python output is num * (num/len) = num*num/len scaled.
+        // So Java output is num*num times smaller than Python.
         double scale = (double) num / len;
+        // scale *= num; // Removed: FFT.irfft is now standard normalized (1/N), so simple scaling is sufficient.
+
         for (int i = 0; i < num; i++) {
-            realResult[i] = ifftResult[i].getReal() * scale;
+            realResult[i] = realResult[i] * scale;
         }
 
         return realResult;

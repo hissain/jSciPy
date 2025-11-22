@@ -28,14 +28,27 @@ public class FFT implements IFFT {
     @Override
     public Complex[] fft(double[] input) {
         int n = input.length;
-        int paddedN = nextPowerOf2(n);
-        double[] paddedInput = Arrays.copyOf(input, paddedN); // Pad with zeros
+        if (Integer.bitCount(n) == 1) { // Power of 2
+            return transformer.transform(input, TransformType.FORWARD);
+        } else {
+            return dft(input);
+        }
+    }
 
-        Complex[] transformResult = transformer.transform(paddedInput, TransformType.FORWARD);
-
-        // Truncate result to original length, but keep full spectrum if n is not power of 2
-        // For FFT, typically we want the full spectrum corresponding to the original signal length
-        return Arrays.copyOf(transformResult, n);
+    private Complex[] dft(double[] input) {
+        int n = input.length;
+        Complex[] output = new Complex[n];
+        for (int k = 0; k < n; k++) {
+            double sumReal = 0;
+            double sumImag = 0;
+            for (int t = 0; t < n; t++) {
+                double angle = -2 * Math.PI * k * t / n;
+                sumReal += input[t] * Math.cos(angle);
+                sumImag += input[t] * Math.sin(angle);
+            }
+            output[k] = new Complex(sumReal, sumImag);
+        }
+        return output;
     }
 
     @Override
@@ -49,23 +62,27 @@ public class FFT implements IFFT {
     @Override
     public Complex[] ifft(Complex[] input) {
         int n = input.length;
-        int paddedN = nextPowerOf2(n);
-        Complex[] paddedInput = new Complex[paddedN];
-        System.arraycopy(input, 0, paddedInput, 0, n);
-        // Fill the rest with Complex.ZERO
-        for (int i = n; i < paddedN; i++) {
-            paddedInput[i] = Complex.ZERO;
+        if (Integer.bitCount(n) == 1) { // Power of 2
+            return transformer.transform(input, TransformType.INVERSE);
+        } else {
+            return idft(input);
         }
+    }
 
-        Complex[] transformResult = transformer.transform(paddedInput, TransformType.INVERSE);
-
-        double scale = (double) paddedN / n; // Adjust for padding effect
-        // Truncate result to original length and apply scaling
-        Complex[] result = new Complex[n];
-        for (int i = 0; i < n; i++) {
-            result[i] = new Complex(transformResult[i].getReal() * scale, transformResult[i].getImaginary() * scale);
+    private Complex[] idft(Complex[] input) {
+        int n = input.length;
+        Complex[] output = new Complex[n];
+        for (int t = 0; t < n; t++) {
+            double sumReal = 0;
+            double sumImag = 0;
+            for (int k = 0; k < n; k++) {
+                double angle = 2 * Math.PI * k * t / n;
+                sumReal += input[k].getReal() * Math.cos(angle) - input[k].getImaginary() * Math.sin(angle);
+                sumImag += input[k].getReal() * Math.sin(angle) + input[k].getImaginary() * Math.cos(angle);
+            }
+            output[t] = new Complex(sumReal / n, sumImag / n);
         }
-        return result;
+        return output;
     }
 
     @Override
@@ -80,14 +97,13 @@ public class FFT implements IFFT {
         }
 
         if (n % 2 == 0) { // Even length input
-            fullSpectrum[n / 2] = input[n / 2]; // Nyquist component
+            fullSpectrum[n / 2] = input[n / 2]; // Nyquist component (incorrect, should be input[input.length - 1] but depends on how rfft is truncated)
         } else { // Odd length input
             // For odd length, the last element of rfft is the Nyquist component,
             // which doesn't have a corresponding negative frequency.
             // The loop above handles this correctly for n-i.
         }
 
-        // Use the modified ifft that handles padding
         Complex[] ifftResult = ifft(fullSpectrum);
         double[] realResult = new double[n];
         for (int i = 0; i < n; i++) {

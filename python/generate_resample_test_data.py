@@ -5,11 +5,13 @@ import os
 def generate_resample_data(test_name, data, num):
     resampled_data = signal.resample(data, num)
     
-    datasets_dir = '../datasets'
+    script_dir = os.path.dirname(__file__)
+    datasets_dir = os.path.abspath(os.path.join(script_dir, '../datasets'))
     
     input_filename = f'{test_name}_input.txt'
     output_filename = f'{test_name}_output.txt'
     
+    os.makedirs(datasets_dir, exist_ok=True)
     np.savetxt(os.path.join(datasets_dir, input_filename), data)
     np.savetxt(os.path.join(datasets_dir, output_filename), resampled_data)
 

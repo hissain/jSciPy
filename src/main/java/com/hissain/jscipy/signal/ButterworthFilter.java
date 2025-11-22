@@ -156,6 +156,11 @@ public class ButterworthFilter implements IButterworthFilter {
     private double[] filter_biquad(double[] signal, double[] b, double[] a) {
         double[] output = new double[signal.length];
         double[] z = lfilter_zi(b, a);
+        // Scale initial conditions by the first signal value
+        for (int k = 0; k < z.length; k++) {
+            z[k] *= signal[0];
+        }
+
         for (int i = 0; i < signal.length; i++) {
             double y = b[0] * signal[i] + z[0];
             for (int j = 1; j < z.length; j++) {
