@@ -1,21 +1,23 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 sns.set_theme()
 
+script_dir = os.path.dirname(__file__)
+
 def read_data_file(filename):
-    with open(filename, 'r') as f:
-        return np.array([float(line.strip()) for line in f])
+    absolute_path = os.path.join(script_dir, filename)
+    with open(absolute_path, 'r') as f:
+        data = [float(line.strip()) for line in f if line.strip()]
+    return data
 
 def plot_test(test_id):
     signal_in = read_data_file(f'../../datasets/resample_{test_id}_input.txt')
     resampled_python = read_data_file(f'../../datasets/resample_{test_id}_output.txt')
     
-    # Generate java output first
-    # For now, I will generate a placeholder for java output
-    # In a real scenario, this would be read from a file
-    resampled_java = resampled_python 
+    resampled_java = read_data_file(f'../../datasets/resample_{test_id}_output_java.txt')
 
     # Time axes for plotting
     t_in = np.linspace(0, 1, len(signal_in))
@@ -32,7 +34,8 @@ def plot_test(test_id):
     plt.legend()
 
     plt.tight_layout()
-    plt.savefig(f"../figs/resample_comparison_{test_id}.png")
+    save_path = os.path.join(script_dir, f"../figs/resample_comparison_{test_id}.png")
+    plt.savefig(save_path)
     plt.close()
 
 if __name__ == '__main__':
