@@ -20,6 +20,8 @@ jSciPy is a Java library designed for scientific computing, offering functionali
 * **FFT and RFFT**:
   * Compute the Fast Fourier Transform (FFT) and Inverse Fast Fourier Transform (IFFT) of a signal.
   * Compute the Real Fast Fourier Transform (RFFT) and Inverse Real Fast Fourier Transform (IRFFT) for real-valued signals, which are more efficient.
+* **Resample**:
+  * Resample a signal to a new number of samples using Fourier method.
 
 ## Getting Started
 
@@ -74,6 +76,12 @@ A seperate demo android application is built on this library that might be helpf
 ### FFT Comparison
 
 ![FFT Comparison](python/figs/fft_comparison_1.png)
+
+### Resample Comparison
+
+![Resample Comparison](python/figs/resample_comparison_1.png)
+
+
 
 ## Usage Examples
 
@@ -243,6 +251,28 @@ public class FFTExample {
         double[] irfftResult = fft.irfft(rfftResult, signal.length);
         System.out.println("IRFFT Result:");
         for (double d : irfftResult) {
+            System.out.printf("%.2f ", d);
+        }
+        System.out.println();
+    }
+}
+```
+
+### Resample
+
+```java
+import com.hissain.jscipy.signal.Resample;
+
+public class ResampleExample {
+    public static void main(String[] args) {
+        double[] signal = {0.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0, -1.0};
+        int num = 4;
+
+        Resample resample = new Resample();
+        double[] resampledSignal = resample.resample(signal, num);
+
+        System.out.println("Resampled Signal:");
+        for (double d : resampledSignal) {
             System.out.printf("%.2f ", d);
         }
         System.out.println();
