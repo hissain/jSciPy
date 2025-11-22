@@ -36,7 +36,7 @@ publishing {
         maven(MavenPublication) {
             groupId = 'com.hissain.jscipy'
             artifactId = 'jscipy'
-            version = '1.0.4'
+            version = '1.0.5'
 
             from components.java
         }
